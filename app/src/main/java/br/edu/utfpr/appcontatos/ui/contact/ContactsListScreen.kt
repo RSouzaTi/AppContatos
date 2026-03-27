@@ -1,7 +1,5 @@
 package br.edu.utfpr.appcontatos.ui.contact
 
-import android.R.attr.onClick
-import android.R.attr.top
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,8 +42,31 @@ import kotlin.random.Random
 
 @Composable
 fun ContactsListScreen(modifier: Modifier = Modifier) {
+    var isLoading = false
+    var isError = false
+    var contacts = generateContacts()
 
-}
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = { AppBar() },
+    ){ paddingValues ->
+        val defaultModifier: Modifier = Modifier.padding(paddingValues)
+        if (isLoading) {
+            LoadingState(modifier = defaultModifier
+            )
+        } else if (isError) {
+            ErrorState(modifier = defaultModifier)
+        } else if (contacts.isEmpty()) {
+            EmptyList(modifier = defaultModifier)
+            } else {
+                List(
+                    modifier = defaultModifier,
+                    contacts = contacts
+                )
+            }
+        }
+    }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
