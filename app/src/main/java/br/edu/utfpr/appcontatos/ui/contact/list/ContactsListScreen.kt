@@ -1,7 +1,9 @@
 package br.edu.utfpr.appcontatos.ui.contact.list
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
+import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import kotlin.random.Random
@@ -260,7 +263,7 @@ fun EmptyListPreview() {
 @Composable
 fun List(
     modifier: Modifier = Modifier,
-    contacts: List<Contact> = emptyList(),
+    contacts: Map<String, List<Contact>> = emptyMap(),
     onFavoritePressed: (Contact) -> Unit
 
 ) {
@@ -268,21 +271,39 @@ fun List(
         modifier = modifier
             .fillMaxSize()
     ) {
-        items(contacts) { contact ->
-            ContactListItem(
-                contact = contact,
-                onFavoritePressed = onFavoritePressed
-            )
+        contacts.forEach { (key, contacts) ->
+            stickyHeader {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Text(
+                        text = key,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 8.dp, start = 16.dp),
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+            items(contacts) { contact ->
+                ContactListItem(
+                    contact = contact,
+                    onFavoritePressed = onFavoritePressed
+                )
+            }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
 fun ListPreview() {
     AppContatosTheme {
         List(
-            contacts = generateContacts(),
+            contacts = generateContacts().groupByInitial(),
             onFavoritePressed = {}
 
         )
