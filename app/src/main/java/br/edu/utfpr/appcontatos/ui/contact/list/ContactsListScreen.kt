@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,12 +14,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +42,9 @@ import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
 import br.edu.utfpr.appcontatos.data.groupByInitial
 import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
+import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
+import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
+import br.edu.utfpr.appcontatos.ui.shared.composables.FavoriteIconButton
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 import kotlin.random.Random
 
@@ -56,9 +56,13 @@ fun ContactsListScreen(
 ) {
     val contentModifier = modifier.fillMaxSize()
     if (viewModel.uiState.value.isLoading) {
-        LoadingState(modifier = contentModifier)
+        DefaultLoadingState(
+            modifier = contentModifier,
+            loadingMessage = stringResource(R.string.carregando_contatos)
+
+            )
     } else if (viewModel.uiState.value.hasError) {
-        ErrorState(
+        DefaultErrorState(
             modifier = contentModifier,
             onTryAgainPressed = viewModel::loadContacts
         )
@@ -133,88 +137,6 @@ fun AppBarPreview() {
             onRefreshPressed = {}
         )
 
-    }
-}
-
-@Composable
-fun LoadingState(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.size(60.dp)
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = "Carregando contatos...",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-
-}
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-fun LoadingStatePreview() {
-    AppContatosTheme {
-        LoadingState()
-    }
-}
-
-@Composable
-fun ErrorState(
-    modifier: Modifier = Modifier,
-    onTryAgainPressed: () -> Unit
-) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Filled.CloudOff,
-            contentDescription = "Erro ao carregar",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(80.dp)
-        )
-        val textPadding = PaddingValues(
-            top = 8.dp,
-            start = 8.dp,
-            end = 8.dp
-        )
-        Text(
-            modifier = Modifier.padding(textPadding),
-            text = "Ocorreu um erro ao carregar",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            modifier = Modifier.padding(textPadding),
-            text = "Aguarde um momento e tente novamente",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        ElevatedButton(
-            modifier = Modifier.padding(top = 16.dp),
-            onClick = onTryAgainPressed
-        ) {
-            Text("Tentar novamente")
-        }
-    }
-}
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-fun ErrorStatePreview() {
-    AppContatosTheme {
-        ErrorState(
-            onTryAgainPressed = {}
-        )
     }
 }
 
@@ -328,25 +250,10 @@ fun ContactListItem(
             )
         },
         trailingContent = {
-            IconButton(
-                onClick = {
-                    onFavoritePressed(contact)
-                }
-            ) {
-                Icon(
-                    imageVector = if (contact.isFavorite) {
-                        Icons.Filled.Favorite
-                    } else {
-                        Icons.Filled.FavoriteBorder
-                    },
-                    contentDescription = "Favoritar",
-                    tint = if (contact.isFavorite) {
-                        Color.Red
-                    } else {
-                        LocalContentColor.current
-                    }
-                )
-            }
+            FavoriteIconButton(
+                isFavorite = contact.isFavorite,
+                onPressed = { onFavoritePressed(contact) }
+            )
         }
     )
 }
