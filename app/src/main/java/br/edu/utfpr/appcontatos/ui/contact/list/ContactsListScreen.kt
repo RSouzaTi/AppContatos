@@ -14,15 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,7 +28,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.appcontatos.R
 import br.edu.utfpr.appcontatos.data.Contact
 import br.edu.utfpr.appcontatos.data.groupByInitial
+import br.edu.utfpr.appcontatos.data.utils.generateContacts
 import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
@@ -58,7 +55,7 @@ fun ContactsListScreen(
     if (viewModel.uiState.value.isLoading) {
         DefaultLoadingState(
             modifier = contentModifier,
-            loadingMessage = stringResource(R.string.carregando_contatos)
+            loadingMessage = "Carregando contatos..."
 
             )
     } else if (viewModel.uiState.value.hasError) {
@@ -258,31 +255,3 @@ fun ContactListItem(
     )
 }
 
-fun generateContacts(): List<Contact> {
-    val firstNames = listOf(
-        "João", "José", "Everton", "Marcos", "André", "Anderson", "Antônio",
-        "Laura", "Ana", "Maria", "Joaquina", "Suelen"
-    )
-    val lastNames = listOf(
-        "Do Carmo", "Oliveira", "Dos Santos", "Da Silva", "Brasil", "Pichetti",
-        "Cordeiro", "Silveira", "Andrades", "Cardoso"
-    )
-    val contacts: MutableList<Contact> = mutableListOf()
-    for (i in 0..29) {
-        var generatedNewContact = false
-        while (!generatedNewContact) {
-            val firstNameIndex = Random.nextInt(firstNames.size)
-            val lastNameIndex = Random.nextInt(lastNames.size)
-            val newContact = Contact(
-                id = i + 1,
-                firstName = firstNames[firstNameIndex],
-                lastName = lastNames[lastNameIndex]
-            )
-            if (!contacts.any { it.fullName == newContact.fullName }) {
-                contacts.add(newContact)
-                generatedNewContact = true
-            }
-        }
-    }
-    return contacts
-}
