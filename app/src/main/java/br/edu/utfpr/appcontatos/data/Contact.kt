@@ -31,5 +31,5 @@ fun LocalDate.format(): String {
 
 enum class  ContactTypeEnum {
     PERSONAL,
-    PROFESSIONA
+    PROFESSIONAL
 }
