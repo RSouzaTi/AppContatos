@@ -19,13 +19,16 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 
 @Composable
-fun ContactFormScreen(modifier: Modifier = Modifier) {
+fun ContactFormScreen(
+    modifier: Modifier = Modifier,
+            onBackPressed: () -> Unit
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             AppBar(
                 isNewContact = true,
-                onBackPressed = {}
+                onBackPressed = onBackPressed
             )
         }
     ) {paddingValues ->

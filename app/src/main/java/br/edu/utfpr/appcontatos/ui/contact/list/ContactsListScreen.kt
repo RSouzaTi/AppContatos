@@ -42,13 +42,14 @@ import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
 import br.edu.utfpr.appcontatos.ui.shared.composables.FavoriteIconButton
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
-import kotlin.random.Random
 
 
 @Composable
 fun ContactsListScreen(
     modifier: Modifier = Modifier,
-    viewModel: ContactsListViewModel = viewModel()
+    viewModel: ContactsListViewModel = viewModel(),
+    onAddPressed: () -> Unit = {},
+    onContactPressed: (Contact) -> Unit
 ) {
     val contentModifier = modifier.fillMaxSize()
     if (viewModel.uiState.isLoading) {
@@ -71,9 +72,7 @@ fun ContactsListScreen(
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(onClick = {
-                    // TODO - navegar para formulário
-                }){
+                ExtendedFloatingActionButton(onClick = onAddPressed) {
                     Icon(
                         imageVector = Icons.Filled.Add,
                         contentDescription = "Adicionar"
