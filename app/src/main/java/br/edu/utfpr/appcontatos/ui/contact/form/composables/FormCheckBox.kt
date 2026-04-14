@@ -38,7 +38,7 @@ fun FormCheckBox (
 
 @Preview(showBackground = true)
 @Composable
-fun FormCheckBoxPreview() {
+private fun FormCheckBoxPreview() {
     AppContatosTheme {
         var  checked by remember { mutableStateOf(false) }
         FormCheckBox(

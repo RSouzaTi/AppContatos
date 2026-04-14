@@ -68,7 +68,7 @@ fun FormTextField(
 
 @Preview(showBackground = true)
 @Composable
-fun FormTextFieldPreview() {
+private fun FormTextFieldPreview() {
     AppContatosTheme {
         var value by remember { mutableStateOf("Teste") }
         val errorMessage = if (value.isBlank()) "Campo obrigatório" else ""
