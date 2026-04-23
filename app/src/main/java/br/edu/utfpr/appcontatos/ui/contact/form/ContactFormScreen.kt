@@ -1,40 +1,78 @@
 package br.edu.utfpr.appcontatos.ui.contact.form
 
+import android.R.attr.value
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import br.edu.utfpr.appcontatos.data.ContactTypeEnum
+import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormCheckBox
+import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormDatePicker
+import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormFiledRow
+import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormRadioButton
+import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormTextField
+import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
+import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
+import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
+
 
 @Composable
 fun ContactFormScreen(
     modifier: Modifier = Modifier,
-            onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    viewModel: ContactFormViewModel = viewModel()
 ) {
+    val contentModifier: Modifier = modifier.fillMaxSize()
+    if (viewModel.uiState.isLoading) {
+        DefaultLoadingState(
+            modifier = contentModifier
+        )
+    } else if (viewModel.uiState.hasErrorLoading) {
+        DefaultErrorState(
+            modifier = contentModifier,
+            onTryAgainPressed = { viewModel.loadContact() }
+        )
+    }
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = contentModifier,
         topBar = {
             AppBar(
                 isNewContact = true,
                 onBackPressed = onBackPressed
             )
         }
-    ) {paddingValues ->
-        Text("Formulário de contato",
-            modifier = Modifier.padding(paddingValues)
+    ) { paddingValues ->
+        FormContent(
+            modifier = Modifier.padding(paddingValues),
+            onFormEvent = viewModel::onFormEvent,
         )
+
     }
 }
 
@@ -73,11 +111,171 @@ private class BooleanParameterProvider : PreviewParameterProvider<Boolean> {
 @Composable
 private fun AppBarPreview(
     @PreviewParameter(BooleanParameterProvider::class) isNewContact: Boolean
-){
-  AppContatosTheme {
+) {
+    AppContatosTheme {
         AppBar(
             isNewContact = isNewContact,
             onBackPressed = {}
         )
     }
 }
+
+@Composable
+private fun FormContent(
+    modifier: Modifier = Modifier,
+    formState: FormState<ContactTypeEnum> = FormState(),
+    onFormEvent: (FormEvent) -> Unit
+) {
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .imePadding()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val formTextFieldModifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+        ContactAvatar(
+            modifier = Modifier.padding(bottom = 16.dp),
+            firstName = formState.firstName.value,
+            lastName = formState.lastName.value,
+            size = 150.dp,
+            textStyles = MaterialTheme.typography.displayLarge
+        )
+        FormFiledRow(
+            label = "Nome",
+            imageVector = Icons.Filled.Person
+        ) {
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = "Nome",
+                value = formState.firstName.value,
+                onValueChange = {`value` ->
+                    onFormEvent(FormEvent.UpdateFirstName(value))
+                },
+                errorMessage = formState.firstName.errorMessage,
+                keyboardCapitalization = KeyboardCapitalization.Words
+
+            )
+        }
+        FormFiledRow (
+            label = "Sobrenome"
+        ){
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = "Sobrenome",
+                value = formState.lastName.value,
+                errorMessage = formState.lastName.errorMessage,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdateLastName(newValue))
+                },
+                keyboardCapitalization = KeyboardCapitalization.Words
+            )
+        }
+        FormFiledRow(
+            label = "Telefone",
+            imageVector = Icons.Filled.Phone
+        ) {
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = "Telefone",
+                value = formState.phoneNumber.value,
+                errorMessage = formState.phoneNumber.errorMessage,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdatePhoneNumber(newValue))
+                },
+                keyboardType = KeyboardType.Phone
+            )
+
+        }
+        FormFiledRow(
+            label = "E-mail",
+            imageVector = Icons.Filled.Mail
+        ) {
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = "E-mail",
+                value = formState.email.value,
+                errorMessage = formState.email.errorMessage,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdateEmail(newValue))
+                },
+                keyboardType = KeyboardType.Email
+            )
+        }
+        FormFiledRow(
+            label = "Data de aniversário"
+        ) {
+            FormDatePicker(
+                modifier = formTextFieldModifier,
+                label = "Data de aniversário",
+                value = formState.birthDate.value,
+                errorMessage = formState.birthDate.errorMessage,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdateBirthDate(newValue))
+                }
+            )
+        }
+        FormTextField(
+            modifier = formTextFieldModifier,
+            label = "Valor patrimonial",
+            value = formState.assetsValue.toString(),
+            errorMessage = formState.assetsValue.errorMessage,
+            onValueChange = {newValue ->
+                onFormEvent(FormEvent.UpdateAssetsValue(newValue))
+            },
+            keyboardType = KeyboardType.Number
+        )
+
+        val choiceOptionsModifier = Modifier.padding(8.dp)
+        FormFiledRow(
+            label = "Favorito"
+        ) {
+            FormCheckBox(
+                modifier = choiceOptionsModifier,
+                label = "Favorito",
+                checked = formState.isFavorite.value,
+                onCheckChanged = {newValue ->
+                    onFormEvent(FormEvent.UpdateIsFavorite(newValue))
+                }
+            )
+        }
+        FormFiledRow(
+            label = "Tipo"
+        ) {
+            FormRadioButton(
+                modifier = choiceOptionsModifier,
+                label = "Pessoal",
+                value = ContactTypeEnum.PERSONAL,
+                groupValue = formState.type.value,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdateType(newValue))
+                }
+            )
+
+            FormRadioButton(
+                modifier = choiceOptionsModifier,
+                label = "Profissional",
+                value = ContactTypeEnum.PROFESSIONAL,
+                groupValue = formState.type.value,
+                onValueChange = {newValue ->
+                    onFormEvent(FormEvent.UpdateType(newValue))
+                }
+            )
+        }
+    }
+}
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun FormContentPreview() {
+    AppContatosTheme {
+        FormContent(
+            formState = FormState(),
+            onFormEvent = {}
+        )
+    }
+}
+

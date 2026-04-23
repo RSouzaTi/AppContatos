@@ -15,7 +15,7 @@ data class Contact(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val birthDate: LocalDate = LocalDate.now(),
     val type: ContactTypeEnum = ContactTypeEnum.PERSONAL,
-    val assertValue: BigDecimal = BigDecimal.ZERO
+    val assetsValue: BigDecimal = BigDecimal.ZERO
 
 ){
     val fullName get(): String = "$firstName $lastName".trim()
