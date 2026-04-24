@@ -6,21 +6,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -46,8 +53,23 @@ import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
 fun ContactFormScreen(
     modifier: Modifier = Modifier,
     onBackPressed: () -> Unit,
-    viewModel: ContactFormViewModel = viewModel()
+    viewModel: ContactFormViewModel = viewModel(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onContactSaved: () -> Unit = {}
+
 ) {
+    LaunchedEffect(snackbarHostState, viewModel.uiState.contactSaved) {
+        if (viewModel.uiState.contactSaved) {
+            onContactSaved()
+        }
+    }
+    LaunchedEffect(snackbarHostState, viewModel.uiState.hasErrorSaving) {
+        if (viewModel.uiState.hasErrorSaving) {
+            snackbarHostState.showSnackbar(
+                message = "Ocorreu um erro ao salvar. Aguarde um momento e tente novamente."
+            )
+        }
+    }
     val contentModifier: Modifier = modifier.fillMaxSize()
     if (viewModel.uiState.isLoading) {
         DefaultLoadingState(
@@ -61,10 +83,15 @@ fun ContactFormScreen(
     }
     Scaffold(
         modifier = contentModifier,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             AppBar(
                 isNewContact = true,
-                onBackPressed = onBackPressed
+                onBackPressed = onBackPressed,
+                isSaving = viewModel.uiState.isSaving,
+                onSavePressed = viewModel::save
             )
         }
     ) { paddingValues ->
@@ -81,7 +108,9 @@ fun ContactFormScreen(
 private fun AppBar(
     modifier: Modifier = Modifier,
     isNewContact: Boolean,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    isSaving: Boolean,
+    onSavePressed: () -> Unit
 ) {
     TopAppBar(
         modifier = modifier.fillMaxWidth(),
@@ -97,7 +126,21 @@ private fun AppBar(
             }
         },
         actions = {
-
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .padding(end = 16.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                IconButton(onClick = onSavePressed) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = "Salvar"
+                    )
+                }
+            }
         }
     )
 }
@@ -115,10 +158,27 @@ private fun AppBarPreview(
     AppContatosTheme {
         AppBar(
             isNewContact = isNewContact,
-            onBackPressed = {}
+            onBackPressed = {},
+            isSaving = false,
+            onSavePressed = {}
         )
     }
 }
+@Preview(showBackground = true)
+@Composable
+private fun AppBarPreviewSaving(
+@PreviewParameter(BooleanParameterProvider::class) isSaving: Boolean
+) {
+    AppContatosTheme {
+        AppBar(
+            isNewContact = true,
+            onBackPressed = {},
+            isSaving = isSaving,
+            onSavePressed = {}
+        )
+    }
+}
+
 
 @Composable
 private fun FormContent(

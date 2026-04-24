@@ -77,6 +77,47 @@ class ContactFormViewModel(
         }
     }
 
+    fun save() {
+        if (uiState.isSaving || !isValidForm()) return
+
+        uiState = uiState.copy(
+            isSaving = true,
+            hasErrorSaving = false
+        )
+        viewModelScope.launch {
+            delay(2000)
+            val hasError = Random.nextBoolean()
+            uiState = if (hasError) {
+                uiState.copy(
+                    isSaving = false,
+                    hasErrorSaving = true
+                )
+            } else {
+                val contactToSave = uiState.contact.copy(
+                    firstName = uiState.formState.firstName.value,
+                    lastName = uiState.formState.lastName.value,
+                    phoneNumber = uiState.formState.phoneNumber.value,
+                    email = uiState.formState.email.value,
+                    isFavorite = uiState.formState.isFavorite.value,
+                    assetsValue = uiState.formState.assetsValue.value.let {
+                        if (it.isBlank()) {
+                            BigDecimal.ZERO
+                        } else {
+                            BigDecimal(it)
+                        }
+                    },
+                    type = uiState.formState.type.value,
+                    birthDate = uiState.formState.birthDate.value
+                )
+                ContactDatasource.instance.save(contactToSave)
+                uiState.copy(
+                    isSaving = false,
+                    contactSaved = true
+                )
+            }
+        }
+    }
+
     private fun onFirstNameChanged(newValue: String) {
         if (uiState.formState.firstName.value == newValue) return
 
@@ -121,17 +162,16 @@ class ContactFormViewModel(
         )
     }
 
-    private fun validatePhoneNumber(value: String): String {
-        return if (value.isNotBlank()
-            && (value.length in 10..11)
-            && value.contains(Regex("\\d"))
+    private fun validatePhoneNumber(value: String): String =
+         if (value.isNotBlank()
+             || (value.length in 10..11)
+            && value.contains(Regex("\\D"))
         ) {
-            "Informe um telefone válido"
+            ""
 
         } else {
-            ""
+            "informe um numero valido (apenas digitod)"
         }
-    }
 
     private fun onEmailChanged(newValue: String) {
         if (uiState.formState.email.value == newValue) return
@@ -204,4 +244,25 @@ class ContactFormViewModel(
             )
         )
     }
- }
+    private fun isValidForm(): Boolean {
+        uiState = uiState.copy(
+            formState = uiState.formState.copy(
+                firstName = uiState.formState.firstName.copy(
+                    errorMessage = validateFirstName(uiState.formState.firstName.value)
+                ),
+                phoneNumber = uiState.formState.phoneNumber.copy(
+                    errorMessage = validatePhoneNumber(uiState.formState.phoneNumber.value)
+            ),
+            email = uiState.formState.email.copy(
+                errorMessage = validateEmail(uiState.formState.email.value)
+            ),
+            assetsValue = uiState.formState.assetsValue.copy(
+                errorMessage = validateAssetsValue(uiState.formState.assetsValue.value)
+            )
+        )
+     )
+        return uiState.formState.isValid
+    }
+}
+
+
