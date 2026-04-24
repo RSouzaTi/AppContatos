@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
@@ -98,6 +99,8 @@ fun ContactFormScreen(
         FormContent(
             modifier = Modifier.padding(paddingValues),
             onFormEvent = viewModel::onFormEvent,
+            isSaving = viewModel.uiState.isSaving
+
         )
 
     }
@@ -184,7 +187,8 @@ private fun AppBarPreviewSaving(
 private fun FormContent(
     modifier: Modifier = Modifier,
     formState: FormState<ContactTypeEnum> = FormState(),
-    onFormEvent: (FormEvent) -> Unit
+    onFormEvent: (FormEvent) -> Unit,
+    isSaving: Boolean = false
 ) {
     Column(
         modifier = modifier
@@ -211,11 +215,13 @@ private fun FormContent(
                 modifier = formTextFieldModifier,
                 label = "Nome",
                 value = formState.firstName.value,
-                onValueChange = {`value` ->
-                    onFormEvent(FormEvent.UpdateFirstName(value))
+                onValueChange = {`newValue` ->
+                    onFormEvent(FormEvent.UpdateFirstName(newValue))
                 },
-                errorMessage = formState.firstName.errorMessage,
-                keyboardCapitalization = KeyboardCapitalization.Words
+                keyboardCapitalization = KeyboardCapitalization.Words,
+                enabled = !isSaving
+
+
 
             )
         }
@@ -230,7 +236,8 @@ private fun FormContent(
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateLastName(newValue))
                 },
-                keyboardCapitalization = KeyboardCapitalization.Words
+                keyboardCapitalization = KeyboardCapitalization.Words,
+                enabled = !isSaving
             )
         }
         FormFiledRow(
@@ -245,7 +252,9 @@ private fun FormContent(
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdatePhoneNumber(newValue))
                 },
-                keyboardType = KeyboardType.Phone
+                keyboardType = KeyboardType.Phone,
+                enabled = !isSaving
+
             )
 
         }
@@ -261,7 +270,9 @@ private fun FormContent(
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateEmail(newValue))
                 },
-                keyboardType = KeyboardType.Email
+                keyboardType = KeyboardType.Email,
+                enabled = !isSaving
+
             )
         }
         FormFiledRow(
@@ -274,20 +285,26 @@ private fun FormContent(
                 errorMessage = formState.birthDate.errorMessage,
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateBirthDate(newValue))
-                }
+                },
+                enabled = !isSaving
             )
         }
-        FormTextField(
-            modifier = formTextFieldModifier,
+        FormFiledRow(
             label = "Valor patrimonial",
-            value = formState.assetsValue.toString(),
-            errorMessage = formState.assetsValue.errorMessage,
-            onValueChange = {newValue ->
-                onFormEvent(FormEvent.UpdateAssetsValue(newValue))
-            },
-            keyboardType = KeyboardType.Number
-        )
-
+            imageVector = Icons.Filled.AttachMoney
+        ) {
+            FormTextField(
+                modifier = formTextFieldModifier,
+                label = "Valor patrimonial",
+                value = formState.assetsValue.toString(),
+                errorMessage = formState.assetsValue.errorMessage,
+                onValueChange = { newValue ->
+                    onFormEvent(FormEvent.UpdateAssetsValue(newValue))
+                },
+                keyboardType = KeyboardType.Number,
+                enabled = !isSaving
+            )
+        }
         val choiceOptionsModifier = Modifier.padding(8.dp)
         FormFiledRow(
             label = "Favorito"
@@ -298,7 +315,8 @@ private fun FormContent(
                 checked = formState.isFavorite.value,
                 onCheckChanged = {newValue ->
                     onFormEvent(FormEvent.UpdateIsFavorite(newValue))
-                }
+                },
+                enabled = !isSaving
             )
         }
         FormFiledRow(
@@ -311,7 +329,8 @@ private fun FormContent(
                 groupValue = formState.type.value,
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateType(newValue))
-                }
+                },
+                enabled = !isSaving
             )
 
             FormRadioButton(
@@ -321,7 +340,8 @@ private fun FormContent(
                 groupValue = formState.type.value,
                 onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateType(newValue))
-                }
+                },
+                enabled = !isSaving
             )
         }
     }
@@ -334,7 +354,8 @@ private fun FormContentPreview() {
     AppContatosTheme {
         FormContent(
             formState = FormState(),
-            onFormEvent = {}
+            onFormEvent = {},
+            isSaving = false
         )
     }
 }
