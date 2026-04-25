@@ -38,10 +38,10 @@ data class ContactFormState(
     val contact: Contact = Contact(),
     val hasErrorLoading: Boolean = false,
     val formState: FormState<ContactTypeEnum> = FormState(),
-    val isSaving: Boolean = false,
-    val hasErrorSaving: Boolean = false,
-    val contactSaved: Boolean = false
-
+    val isProcessing: Boolean = false,
+    val processingErrorMessage: String = "",
+    val contactUpdate: Boolean = false,
+    val showConfirmationDialog: Boolean = false
 ) {
     val isNewContact get(): Boolean = contactId <= 0
 }

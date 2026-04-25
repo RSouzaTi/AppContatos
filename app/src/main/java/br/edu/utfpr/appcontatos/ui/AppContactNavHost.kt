@@ -45,7 +45,7 @@ fun AppContactNavHost(
                 onBackPressed = {
                     navController.popBackStack()
                 },
-                onContactSaved = {
+                onUpdated = {
                     navController.navigate("List") {
                         popUpTo(navController.graph.findStartDestination().id) {
                             inclusive = true

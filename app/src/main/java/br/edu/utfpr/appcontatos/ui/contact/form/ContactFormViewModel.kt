@@ -32,9 +32,8 @@ class ContactFormViewModel(
 
     fun loadContact() {
         uiState = uiState.copy(
-            isLoading = false,
+            isLoading = true,
             hasErrorLoading = false
-
         )
         viewModelScope.launch {
             delay(2000)
@@ -78,20 +77,20 @@ class ContactFormViewModel(
     }
 
     fun save() {
-        if (uiState.isSaving || !isValidForm()) return
+        if (uiState.isProcessing || !isValidForm()) return
 
         uiState = uiState.copy(
-            isSaving = true,
-            hasErrorSaving = false
+            isProcessing = true,
+            processingErrorMessage = "",
         )
         viewModelScope.launch {
             delay(2000)
             val hasError = Random.nextBoolean()
             uiState = if (hasError) {
                 uiState.copy(
-                    isSaving = false,
-                    hasErrorSaving = true
-                )
+                    isProcessing = false,
+                    processingErrorMessage = "Ocorreu um erro ao salvar. Aguarde um momento e tente novamente.",
+                    )
             } else {
                 val contactToSave = uiState.contact.copy(
                     firstName = uiState.formState.firstName.value,
@@ -111,8 +110,47 @@ class ContactFormViewModel(
                 )
                 ContactDatasource.instance.save(contactToSave)
                 uiState.copy(
-                    isSaving = false,
-                    contactSaved = true
+                    isProcessing = false,
+                    showConfirmationDialog = false,
+                    contactUpdate = true
+                )
+            }
+        }
+    }
+
+    fun showConfirmationDialog() {
+        uiState = uiState.copy(
+            showConfirmationDialog = true
+        )
+    }
+
+    fun hideConfirmationDialog() {
+        uiState = uiState.copy(
+            showConfirmationDialog = false
+        )
+    }
+
+    fun delete() {
+        uiState = uiState.copy(
+            isProcessing = true,
+            showConfirmationDialog = false,
+            processingErrorMessage = ""
+        )
+        viewModelScope.launch {
+            delay(2000)
+            val hasError = Random.nextBoolean()
+            uiState = if (hasError) {
+                uiState.copy(
+                    isProcessing = false,
+                    processingErrorMessage =
+                        "Ocorreu um erro ao excluir. Aguarde um momento e tente novamente."
+                )
+            } else {
+                ContactDatasource.instance.delete(uiState.contact)
+                uiState.copy(
+                    isProcessing = false,
+                    processingErrorMessage = "",
+                    contactUpdate = true
                 )
             }
         }
@@ -126,7 +164,6 @@ class ContactFormViewModel(
                 firstName = FormField(
                     value = newValue,
                     errorMessage = validateFirstName(newValue)
-
                 )
             )
         )
@@ -163,14 +200,10 @@ class ContactFormViewModel(
     }
 
     private fun validatePhoneNumber(value: String): String =
-         if (value.isNotBlank()
-             || (value.length in 10..11)
-            && value.contains(Regex("\\D"))
-        ) {
+         if (value.isBlank() || (value.length in 10..11 && value.all { it.isDigit() })) {
             ""
-
         } else {
-            "informe um numero valido (apenas digitod)"
+            "Informe um número válido (apenas dígitos)"
         }
 
     private fun onEmailChanged(newValue: String) {
@@ -219,11 +252,11 @@ class ContactFormViewModel(
     }
     private fun validateAssetsValue(value: String): String{
         if (value.isBlank()) return ""
-        try {
+        return try {
             BigDecimal(value)
-            return ""
+            ""
         } catch (e: NumberFormatException) {
-           return "Informe um valor válido"
+           "Informe um valor válido"
         }
     }
     private fun onBirthDateChanged(newValue: LocalDate) {
@@ -264,5 +297,3 @@ class ContactFormViewModel(
         return uiState.formState.isValid
     }
 }
-
-

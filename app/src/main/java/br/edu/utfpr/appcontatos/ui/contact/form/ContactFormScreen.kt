@@ -1,6 +1,10 @@
 package br.edu.utfpr.appcontatos.ui.contact.form
 
+import android.R.attr.content
+import android.R.attr.text
 import android.R.attr.value
+import android.app.AlertDialog
+import android.media.audiofx.DynamicsProcessing
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,9 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +55,7 @@ import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
 import br.edu.utfpr.appcontatos.ui.theme.AppContatosTheme
+import kotlin.let
 
 
 @Composable
@@ -56,20 +64,28 @@ fun ContactFormScreen(
     onBackPressed: () -> Unit,
     viewModel: ContactFormViewModel = viewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    onContactSaved: () -> Unit = {}
+    onUpdated: () -> Unit = {}
 
 ) {
-    LaunchedEffect(snackbarHostState, viewModel.uiState.contactSaved) {
-        if (viewModel.uiState.contactSaved) {
-            onContactSaved()
+    LaunchedEffect(snackbarHostState, viewModel.uiState.contactUpdate) {
+        if (viewModel.uiState.contactUpdate) {
+            onUpdated()
         }
     }
-    LaunchedEffect(snackbarHostState, viewModel.uiState.hasErrorSaving) {
-        if (viewModel.uiState.hasErrorSaving) {
+    LaunchedEffect(snackbarHostState, viewModel.uiState.processingErrorMessage) {
+        if (viewModel.uiState.processingErrorMessage.isNotBlank()) {
             snackbarHostState.showSnackbar(
-                message = "Ocorreu um erro ao salvar. Aguarde um momento e tente novamente."
+                viewModel.uiState.processingErrorMessage
             )
         }
+    }
+
+    if (viewModel.uiState.showConfirmationDialog) {
+        ConfirmationDialog(
+            message = "Deseja realmente excluir o contato?",
+            onDismiss = viewModel::hideConfirmationDialog,
+            onConfirm = viewModel::delete
+        )
     }
     val contentModifier: Modifier = modifier.fillMaxSize()
     if (viewModel.uiState.isLoading) {
@@ -89,18 +105,18 @@ fun ContactFormScreen(
         },
         topBar = {
             AppBar(
-                isNewContact = true,
+                isNewContact = viewModel.uiState.isNewContact,
                 onBackPressed = onBackPressed,
-                isSaving = viewModel.uiState.isSaving,
-                onSavePressed = viewModel::save
+                isProcessing = viewModel.uiState.isProcessing,
+                onSavePressed = viewModel::save,
+                onDeletedProcessing = viewModel::showConfirmationDialog
             )
         }
     ) { paddingValues ->
         FormContent(
             modifier = Modifier.padding(paddingValues),
             onFormEvent = viewModel::onFormEvent,
-            isSaving = viewModel.uiState.isSaving
-
+            isSaving = viewModel.uiState.isProcessing
         )
 
     }
@@ -112,8 +128,9 @@ private fun AppBar(
     modifier: Modifier = Modifier,
     isNewContact: Boolean,
     onBackPressed: () -> Unit,
-    isSaving: Boolean,
-    onSavePressed: () -> Unit
+    isProcessing: Boolean,
+    onSavePressed: () -> Unit,
+    onDeletedProcessing: () -> Unit
 ) {
     TopAppBar(
         modifier = modifier.fillMaxWidth(),
@@ -129,7 +146,7 @@ private fun AppBar(
             }
         },
         actions = {
-            if (isSaving) {
+            if (isProcessing) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(60.dp)
@@ -137,6 +154,14 @@ private fun AppBar(
                     strokeWidth = 2.dp
                 )
             } else {
+                if (!isNewContact) {
+                    IconButton(onClick = onDeletedProcessing) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Remover"
+                        )
+                    }
+                }
                 IconButton(onClick = onSavePressed) {
                     Icon(
                         imageVector = Icons.Filled.Check,
@@ -162,8 +187,9 @@ private fun AppBarPreview(
         AppBar(
             isNewContact = isNewContact,
             onBackPressed = {},
-            isSaving = false,
-            onSavePressed = {}
+            isProcessing = false,
+            onSavePressed = {},
+            onDeletedProcessing = {}
         )
     }
 }
@@ -176,8 +202,9 @@ private fun AppBarPreviewSaving(
         AppBar(
             isNewContact = true,
             onBackPressed = {},
-            isSaving = isSaving,
-            onSavePressed = {}
+            isProcessing = isSaving,
+            onSavePressed = {},
+            onDeletedProcessing = {}
         )
     }
 }
@@ -360,3 +387,33 @@ private fun FormContentPreview() {
     }
 }
 
+@Composable
+ private fun ConfirmationDialog (
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    message: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+ ) {
+    AlertDialog(
+        modifier = modifier,
+        title = title?.let {
+            { Text(it) }
+
+        },
+        text = { Text(message) },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+
+    
+}
