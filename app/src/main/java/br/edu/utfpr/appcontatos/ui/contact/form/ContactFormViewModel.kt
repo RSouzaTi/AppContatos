@@ -54,7 +54,7 @@ class ContactFormViewModel(
                         phoneNumber = FormField(contact.phoneNumber),
                         email = FormField(contact.email),
                         isFavorite = FormField(contact.isFavorite),
-                        assetsValue = FormField(contact.assetsValue.toString()),
+                        assetsValue = FormField(contact.assetsValue.movePointRight(2).toString()),
                         birthDate = FormField(contact.birthDate),
                         type = FormField(contact.type)
                     )
@@ -102,7 +102,7 @@ class ContactFormViewModel(
                         if (it.isBlank()) {
                             BigDecimal.ZERO
                         } else {
-                            BigDecimal(it)
+                            BigDecimal(it).movePointLeft(2)
                         }
                     },
                     type = uiState.formState.type.value,
@@ -187,24 +187,26 @@ class ContactFormViewModel(
     }
 
     private fun onPhoneNumberChanged(newValue: String) {
-        if (uiState.formState.phoneNumber.value == newValue) return
+        val newPhoneNumber = newValue.filter { it.isDigit() }
+        if (newPhoneNumber.length > 11 ||
+            uiState.formState.phoneNumber.value == newPhoneNumber) return
 
         uiState = uiState.copy(
             formState = uiState.formState.copy(
                 phoneNumber = FormField(
-                    value = newValue,
-                    errorMessage = validatePhoneNumber(newValue)
+                    value = newPhoneNumber,
+                    errorMessage = validatePhoneNumber(newPhoneNumber)
                 )
             )
         )
     }
 
     private fun validatePhoneNumber(value: String): String =
-         if (value.isBlank() || (value.length in 10..11 && value.all { it.isDigit() })) {
+         if (value.isBlank() && value.length <= 10) {
+            "Informe um telefone válido"
+        }else {
             ""
-        } else {
-            "Informe um número válido (apenas dígitos)"
-        }
+         }
 
     private fun onEmailChanged(newValue: String) {
         if (uiState.formState.email.value == newValue) return
@@ -239,26 +241,19 @@ class ContactFormViewModel(
 
     }
     private fun onAssetsValueChanged(newValue: String) {
-        if (uiState.formState.assetsValue.value == newValue) return
+        val newAssetsValue =newValue.filter { it.isDigit() }
+        if (newAssetsValue.length >= 20
+            || uiState.formState.assetsValue.value == newAssetsValue) return
 
         uiState = uiState.copy(
             formState = uiState.formState.copy(
                 assetsValue = FormField(
-                    value = newValue,
-                    errorMessage = validateAssetsValue(newValue)
+                    value = newAssetsValue,
                 )
             )
         )
     }
-    private fun validateAssetsValue(value: String): String{
-        if (value.isBlank()) return ""
-        return try {
-            BigDecimal(value)
-            ""
-        } catch (e: NumberFormatException) {
-           "Informe um valor válido"
-        }
-    }
+
     private fun onBirthDateChanged(newValue: LocalDate) {
         if (uiState.formState.birthDate.value == newValue) return
 
@@ -289,11 +284,9 @@ class ContactFormViewModel(
             email = uiState.formState.email.copy(
                 errorMessage = validateEmail(uiState.formState.email.value)
             ),
-            assetsValue = uiState.formState.assetsValue.copy(
-                errorMessage = validateAssetsValue(uiState.formState.assetsValue.value)
-            )
+           )
         )
-     )
+
         return uiState.formState.isValid
     }
 }

@@ -2,6 +2,7 @@ package br.edu.utfpr.appcontatos.ui.contact.list
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,7 +92,8 @@ fun ContactsListScreen(
                 List(
                     modifier = defaultModifier,
                     contacts = viewModel.uiState.contacts,
-                    onFavoritePressed = viewModel::toggleIsFavorite
+                    onFavoritePressed = viewModel::toggleIsFavorite,
+                    onContactPressed = onContactPressed
                 )
             }
         }
@@ -181,7 +183,8 @@ fun EmptyListPreview() {
 fun List(
     modifier: Modifier = Modifier,
     contacts: Map<String, List<Contact>> = emptyMap(),
-    onFavoritePressed: (Contact) -> Unit
+    onFavoritePressed: (Contact) -> Unit,
+    onContactPressed: (Contact) -> Unit
 
 ) {
     LazyColumn(
@@ -207,7 +210,8 @@ fun List(
             items(contacts) { contact ->
                 ContactListItem(
                     contact = contact,
-                    onFavoritePressed = onFavoritePressed
+                    onFavoritePressed = onFavoritePressed,
+                    modifier = Modifier.clickable { onContactPressed(contact) }
                 )
             }
         }
@@ -221,7 +225,8 @@ fun ListPreview() {
     AppContatosTheme {
         List(
             contacts = generateContacts().groupByInitial(),
-            onFavoritePressed = {}
+            onFavoritePressed = {},
+            onContactPressed = {}
 
         )
     }
@@ -252,4 +257,3 @@ fun ContactListItem(
         }
     )
 }
-

@@ -1,10 +1,6 @@
 package br.edu.utfpr.appcontatos.ui.contact.form
 
-import android.R.attr.content
-import android.R.attr.text
-import android.R.attr.value
-import android.app.AlertDialog
-import android.media.audiofx.DynamicsProcessing
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +47,8 @@ import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormDatePicker
 import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormFiledRow
 import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormRadioButton
 import br.edu.utfpr.appcontatos.ui.contact.form.composables.FormTextField
+import br.edu.utfpr.appcontatos.ui.contact.form.visualtransformation.CurrencyVisualTransformation
+import br.edu.utfpr.appcontatos.ui.contact.form.visualtransformation.PhoneVisualTransformation
 import br.edu.utfpr.appcontatos.ui.shared.composables.ContactAvatar
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultErrorState
 import br.edu.utfpr.appcontatos.ui.shared.composables.DefaultLoadingState
@@ -115,6 +113,7 @@ fun ContactFormScreen(
     ) { paddingValues ->
         FormContent(
             modifier = Modifier.padding(paddingValues),
+            formState = viewModel.uiState.formState,
             onFormEvent = viewModel::onFormEvent,
             isSaving = viewModel.uiState.isProcessing
         )
@@ -242,14 +241,11 @@ private fun FormContent(
                 modifier = formTextFieldModifier,
                 label = "Nome",
                 value = formState.firstName.value,
-                onValueChange = {`newValue` ->
+                onValueChange = {newValue ->
                     onFormEvent(FormEvent.UpdateFirstName(newValue))
                 },
                 keyboardCapitalization = KeyboardCapitalization.Words,
                 enabled = !isSaving
-
-
-
             )
         }
         FormFiledRow (
@@ -280,8 +276,8 @@ private fun FormContent(
                     onFormEvent(FormEvent.UpdatePhoneNumber(newValue))
                 },
                 keyboardType = KeyboardType.Phone,
-                enabled = !isSaving
-
+                enabled = !isSaving,
+                visualTransformation = PhoneVisualTransformation()
             )
 
         }
@@ -323,13 +319,14 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 label = "Valor patrimonial",
-                value = formState.assetsValue.toString(),
+                value = formState.assetsValue.value,
                 errorMessage = formState.assetsValue.errorMessage,
                 onValueChange = { newValue ->
                     onFormEvent(FormEvent.UpdateAssetsValue(newValue))
                 },
                 keyboardType = KeyboardType.Number,
-                enabled = !isSaving
+                enabled = !isSaving,
+                visualTransformation = CurrencyVisualTransformation()
             )
         }
         val choiceOptionsModifier = Modifier.padding(8.dp)

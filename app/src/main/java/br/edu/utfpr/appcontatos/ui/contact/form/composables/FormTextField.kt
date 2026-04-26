@@ -82,6 +82,6 @@ private fun FormTextFieldPreview() {
             modifier = Modifier.padding(20.dp)
         )
     }
-    }
+}
 
 
